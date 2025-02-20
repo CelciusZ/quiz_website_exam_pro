@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Python Quiz</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header>
+        {% if 'username' in session %}
+            <div class="top-scores">
+                En Yüksek Puan (Tüm Kullanıcılar): {{ top_score or 0 }} |
+                Senin En Yüksek Puanın: {{ high_score or 0 }}
+            </div>
+            <a href="{{ url_for('logout') }}">Çıkış Yap</a>
+        {% endif %}
+    </header>
+    {% block content %}{% endblock %}
+    <footer>
+        <p>Aykut Pro Exam</p>
+    </footer>
+</body>
+</html>
