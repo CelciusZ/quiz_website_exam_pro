@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block content %}
+    <h1>Sınav Sonucu</h1>
+    <p>Son Puanın: {{ score }}</p>
+    <a href="{{ url_for('quiz', page=1) }}">Sınavı Tekrarla</a>
+{% endblock %}

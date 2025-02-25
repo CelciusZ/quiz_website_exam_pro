@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block content %}
+    <div class="page-info">
+        <p>Sayfa {{ page }} / {{ total_pages }}</p>
+    </div>
+    <h1>Sınav</h1>
+    <form method="POST">
+        {% for question in questions %}
+            <div class="question">
+                <p>{{ question.text }}</p>
+                {% for option in question.options_list %}
+                    <label>
+                        <input type="radio" name="question_{{ question.id }}" value="{{ option }}" required>
+                        {{ option }}
+                    </label><br>
+                {% endfor %}
+            </div>
+        {% endfor %}
+        {% if page < total_pages %}
+            <button type="submit">Sonraki</button>
+        {% else %}
+            <button type="submit">Sınavı Gönder</button>
+        {% endif %}
+    </form>
+    {% if page > 1 %}
+        <a href="{{ url_for('quiz', page=page-1) }}">Önceki</a>
+    {% endif %}
+{% endblock %}
