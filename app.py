@@ -60,8 +60,14 @@ with app.app_context():
 @app.route('/')
 def index():
     if 'username' not in session:
-        return redirect(url_for('login'))
-    return render_template('index.html')
+        return render_template('index.html', high_score=0, top_score=0, top_username="Henüz yok")
+
+    user = User.query.filter_by(username=session['username']).first()
+    high_score = user.high_score if user else 0
+    top_user = User.query.order_by(User.high_score.desc()).first()
+    top_score = top_user.high_score if top_user else 0
+    top_username = top_user.username if top_user else "Henüz yok"
+    return render_template('index.html', high_score=high_score, top_score=top_score, top_username=top_username)
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -73,9 +79,15 @@ def login():
             user = User(username=username)
             db.session.add(user)
             db.session.commit()
+            print(f"Yeni kullanıcı oluşturuldu: {username}")
         session['username'] = username
         return redirect(url_for('index'))
-    return render_template('index.html')
+
+    high_score = 0
+    top_user = User.query.order_by(User.high_score.desc()).first()
+    top_score = top_user.high_score if top_user else 0
+    top_username = top_user.username if top_user else "Henüz yok"
+    return render_template('index.html', high_score=high_score, top_score=top_score, top_username=top_username)
 
 
 @app.route('/quiz', methods=['GET', 'POST'])
@@ -96,6 +108,13 @@ def quiz():
     questions = all_questions[start:end]
     print(f"Sayfa {page}: {len(questions)} soru gösteriliyor!")
 
+    # Kullanıcı ve puan bilgilerini çek
+    user = User.query.filter_by(username=session['username']).first()
+    high_score = user.high_score if user else 0
+    top_user = User.query.order_by(User.high_score.desc()).first()
+    top_score = top_user.high_score if top_user else 0
+    top_username = top_user.username if top_user else "Henüz yok"
+
     if request.method == 'POST':
         if 'answers' not in session:
             session['answers'] = {}
@@ -115,12 +134,8 @@ def quiz():
                 if user_answer == question.correct_answer:
                     score += 1
 
-            user = User.query.filter_by(username=session['username']).first()
             if not user:
-                user = User(username=session['username'])
-                db.session.add(user)
-                db.session.commit()
-                print(f"Yeni kullanıcı oluşturuldu: {session['username']}")
+                return "Hata: Kullanıcı bulunamadı, lütfen tekrar giriş yapın", 500
 
             result = Result(user_id=user.id, score=score)
             if score > user.high_score:
@@ -129,10 +144,25 @@ def quiz():
             db.session.commit()
 
             top_score = db.session.query(db.func.max(User.high_score)).scalar()
-            session.pop('answers', None)
-            return render_template('result.html', score=score, high_score=user.high_score, top_score=top_score)
+            return redirect(url_for('result', score=score, high_score=user.high_score, top_score=top_score))
 
-    return render_template('quiz.html', questions=questions, page=page, total_pages=total_pages)
+    return render_template('quiz.html', questions=questions, page=page, total_pages=total_pages,
+                           high_score=high_score, top_score=top_score, top_username=top_username)
+
+
+@app.route('/result')
+def result():
+    if 'username' not in session:
+        return redirect(url_for('login'))
+
+    score = request.args.get('score', type=int)
+    high_score = request.args.get('high_score', type=int)
+    top_score = request.args.get('top_score', type=int)
+    user = User.query.filter_by(username=session['username']).first()
+    top_user = User.query.order_by(User.high_score.desc()).first()
+    top_username = top_user.username if top_user else "Henüz yok"
+    return render_template('result.html', score=score, high_score=high_score, top_score=top_score,
+                           top_username=top_username)
 
 
 @app.route('/logout')
@@ -140,6 +170,25 @@ def logout():
     session.pop('username', None)
     session.pop('answers', None)
     return redirect(url_for('index'))
+
+
+@app.route('/about')
+def about():
+    if 'username' not in session:
+        return redirect(url_for('login'))
+
+    user = User.query.filter_by(username=session['username']).first()
+    high_score = user.high_score if user else 0
+    top_user = User.query.order_by(User.high_score.desc()).first()
+    top_score = top_user.high_score if top_user else 0
+    top_username = top_user.username if top_user else "Henüz yok"
+
+    about_title = "Hakkında Sayfası"
+    about_content = "Bu bir sınav uygulamasıdır. Aykut tarafından yapıldı, gençler için eğlenceli bir öğrenme aracı!"
+    about_footer = "2025 - PythonAnywhere"
+
+    return render_template('about.html', high_score=high_score, top_score=top_score, top_username=top_username,
+                           about_title=about_title, about_content=about_content, about_footer=about_footer)
 
 
 if __name__ == '__main__':
