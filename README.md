@@ -8,4 +8,5 @@
 
 https://phardi.pythonanywhere.com/
 
-https://github.com/CelciusZ/quiz_website_exam_pro.git
+https://github.com/CelciusZ/quiz_website_exam_pro
+
